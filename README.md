@@ -7,7 +7,7 @@ Term: Spring 2017
 
 + Team #
 + Team members
-	+ team member 1
+	+ team member 1 Yifei Lin
 	+ team member 2
 	+ team member 3
 	+ team member 4
