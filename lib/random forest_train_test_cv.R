@@ -1,6 +1,9 @@
 
 library(data.table)
-library(EBImage)
+library(dplyr)
+
+# set working directory here
+setwd('E:/statistics/applied data science/Project3/spr2017-proj3-group8/lib') ##better way?
 
 # Load data(sift_features) and label
 feature <- fread("../output/sift_features/sift_features.csv", header = TRUE)
@@ -51,8 +54,11 @@ rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
   n.fold <- floor(n/K)
   s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
   cv.error <- rep(NA, K)
+  print("Sampling completed")
   
   for (i in 1:K){
+    print(i/K) #processing record
+    
     train.data <- X.train[s != i,]
     train.label <- y.train[s != i]
     test.data <- X.train[s == i,]
@@ -62,6 +68,7 @@ rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
     rf_predict <- rf_test(fit_train = rf_fit, dat_test = test.data)
     
     cv.error[i] <- mean(rf_predict != test.label)
+    
   }
   
   error <- mean(cv.error)
@@ -69,3 +76,5 @@ rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
   
   return(c(error, sd))
 }
+
+# rf_cv(X.train=feature, y.train=label, K=5) ## return c(0.28200000 0.02723738)
