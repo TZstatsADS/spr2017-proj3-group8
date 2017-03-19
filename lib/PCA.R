@@ -17,8 +17,9 @@ feature.pca <- function(dat_feature, threshold=0.85){
   plot(seq(1,length(sd.pca), by=1), prop_var, type="l", 
        xlab = "PCA", ylab = "Proportion of variance",
        main = "Proportion of Variance")
-  abline(h=threshold, col="red")
+  abline(h=prop_var[thre], col="red")
   abline(v=thre, col="blue")
+  points(x=thre, y=prop_var[thre], pch="+", col="red")
   
   cum_var <- summary.pca$importance[3,]
   plot(seq(1,length(sd.pca), by=1), cum_var, type="l", 
@@ -26,6 +27,7 @@ feature.pca <- function(dat_feature, threshold=0.85){
        main = "Cumulation of Variance")
   abline(h=threshold, col="red")
   abline(v=thre, col="blue")
+  points(x=thre, y=threshold, pch="+", col="red")
   par(op)
   dev.off()
   
