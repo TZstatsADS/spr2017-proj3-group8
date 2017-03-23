@@ -1,7 +1,7 @@
 # Random Forest: Train
 # choose between the method "ranger" and "randomForest"
 # if ranger==TRUE, use ranger function in "ranger" package to train random forest
-rf_train <- function(dat_train, label_train, ntree=500, mtry=sqrt(ncol(dat_train)), 
+rf_train <- function(dat_train, label_train, ntree=500, 
                      saveFile=FALSE, ranger=TRUE){
   
   library(ranger)
@@ -12,13 +12,11 @@ rf_train <- function(dat_train, label_train, ntree=500, mtry=sqrt(ncol(dat_train
   if (ranger==TRUE){
     fit <- ranger(label~.,
                 data = train,
-                num.trees = ntree,
-                mtry = mtry)
+                num.trees = ntree)
   }else{
     fit <- randomForest::randomForest(label~.,
                   data = train,
                   ntree = ntree,
-                  mtry = mtry,
                   type = "classification")
   }
   
@@ -46,9 +44,9 @@ rf_test <- function(fit_train, dat_test, saveFile=FALSE){
 
 
 # Random Forest with cross-validation
-rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
+rf_cv <- function(dat_train, label_train, K=5, ntree=500){
   
-  n <- length(y.train)
+  n <- length(label_train)
   n.fold <- floor(n/K)
   s <- sample(rep(1:K, c(rep(n.fold, K-1), n-(K-1)*n.fold)))  
   cv.error <- rep(NA, K)
@@ -56,12 +54,13 @@ rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
   for (i in 1:K){
     cat(i/K) #processing record
     
-    train.data <- X.train[s != i,]
-    train.label <- y.train[s != i]
-    test.data <- X.train[s == i,]
-    test.label <- y.train[s == i]
+    train.data <- dat_train[s != i,]
+    train.label <- label_train[s != i]
+    test.data <- dat_train[s == i,]
+    test.label <- label_train[s == i]
     
-    rf_fit <- rf_train(dat_train = train.data, label_train = train.label, ntree = ntree, mtry = mtry)
+    
+    rf_fit <- rf_train(dat_train = train.data, label_train = train.label, ntree = ntree)
     rf_predict <- rf_test(fit_train = rf_fit, dat_test = test.data)
     
     cv.error[i] <- mean(rf_predict != test.label)
@@ -73,5 +72,3 @@ rf_cv <- function(X.train, y.train, K=5, ntree=500, mtry=sqrt(ncol(X.train))){
   
   return(c(error, sd))
 }
-
-#rf_cv(X.train=feature, y.train=label, K=5) ## return c(0.28450000 0.02706474)
