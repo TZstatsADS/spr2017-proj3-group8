@@ -1,18 +1,18 @@
 install.packages("drat", repos="https://cran.rstudio.com")
 drat:::addRepo("dmlc")
 install.packages("mxnet")
-library("mxnet")
+library(mxnet)
 
 # Load images
 #-------------------------------------------------------------------------------
-image_dir <- "../data/raw_images"
+# image_dir <- "../data/raw_images"
+image_dir <- "../train"
+
+
 source("https://bioconductor.org/biocLite.R")
 biocLite("EBImage")
-
 library(EBImage)
 
-width <- 28
-height <- 28
 ## pbapply is a library to add progress bar *apply functions
 ## pblapply will replace lapply
 install.packages("pbapply")
@@ -21,15 +21,35 @@ extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = 
   img_size <- width*height
   ## List images in path
   images_names <- list.files(dir_path)
-    print(paste("Start processing", length(images_names), "images"))
+  
+  ### comment out later
+  if (add_label) {
+    ## Select only cats or dogs images
+    images_names <- images_names[grepl(ifelse(is_cat, "cat", "dog"), images_names)]
+    ## Set label, cat = 0, dog = 1
+    label <- ifelse(is_cat, 0, 1)
+  }  
+  #####################
+  
+  
+  print(paste("Start processing", length(images_names), "images"))
+  
+  
   ## This function will resize an image, turn it into greyscale
   feature_list <- pblapply(images_names, function(imgname) {
     ## Read image
     img <- readImage(file.path(dir_path, imgname))
     ## Resize image
     img_resized <- resize(img, w = width, h = height)
+    
+    
+    ### COMMENT OUT LATER??
+    ## Set to grayscale
+    grayimg <- channel(img_resized, "gray")
+    #######################
+    
     ## Get the image as a matrix
-    img_matrix <- img_resized@.Data
+    img_matrix <- grayimg@.Data
     ## Coerce to a vector
     img_vector <- as.vector(t(img_matrix))
     return(img_vector)
@@ -46,30 +66,42 @@ extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = 
   return(feature_matrix)
 }
 
-df <- extract_feature(dir_path = image_dir, width = width, height = height)
 
+width <- 72
+height <- 72
+cats_data <- extract_feature(dir_path = image_dir, width = width, height = height)
+dogs_data <- extract_feature(dir_path = image_dir, width = width, height = height, is_cat = FALSE)
 
-# Load data(sift_features) and label
-#-------------------------------------------------------------------------------
-install.packages("data.table")
-install.packages("dplyr")
-library(data.table)
-library(dplyr)
-feature <- fread("../output/sift_features/sift_features.csv", header = TRUE)
-label <- fread("../data/labels.csv")
-label <- c(t(label))
-feature <- tbl_df(t(feature)) 
-complete_set <- cbind(label, feature)
+dim(cats_data)
+dim(dogs_data)
 
-complete_set <- df
+saveRDS(cats_data, "cat2.rds")
+saveRDS(dogs_data, "dog2.rds")
+
+# # Load data(sift_features) and label
+# #-------------------------------------------------------------------------------
+# install.packages("data.table")
+# install.packages("dplyr")
+# library(data.table)
+# library(dplyr)
+# feature <- fread("../output/sift_features/sift_features.csv", header = TRUE)
+# label <- fread("../data/labels.csv")
+# label <- c(t(label))
+# feature <- tbl_df(t(feature)) 
+# complete_set <- cbind(label, feature)
+
+# df <- extract_feature(dir_path = image_dir, width = width, height = height)
+# complete_set <- df
 
 
 # Split data into training and test
 #-------------------------------------------------------------------------------
 install.packages("caret")
 library(caret)
+## Bind rows in a single dataset
+complete_set <- rbind(cats_data, dogs_data)
+
 ## test/training partitions
-set.seed(1)
 training_index <- createDataPartition(complete_set$label, p = .8, times = 1)
 training_index <- unlist(training_index)
 train_set <- complete_set[training_index,]
@@ -85,13 +117,13 @@ train_data <- data.matrix(train_set)
 train_x <- t(train_data[, -1])
 train_y <- train_data[,1]
 train_array <- train_x
-dim(train_array) <- c(28, 28, 1, ncol(train_x))
+dim(train_array) <- c(72, 72, 1, ncol(train_x))
 
 test_data <- data.matrix(test_set)
 test_x <- t(test_set[,-1])
 test_y <- test_set[,1]
 test_array <- test_x
-dim(test_array) <- c(28, 28, 1, ncol(test_x))
+dim(test_array) <- c(72, 72, 1, ncol(test_x))
 
 
 # Set up the symbolic model
@@ -120,7 +152,7 @@ NN_model <- mx.symbol.SoftmaxOutput(data = fc_2)
 #-------------------------------------------------------------------------------
 
 # Set seed for reproducibility
-mx.set.seed(1)
+mx.set.seed(100)
 
 # Device used. CPU in my case.
 devices <- mx.cpu()
@@ -133,10 +165,11 @@ model <- mx.model.FeedForward.create(NN_model,
                                      X = train_array,
                                      y = train_y,
                                      ctx = devices,
-                                     num.round = 5,
-                                     array.batch.size = 40,
+                                     num.round = 60,
+                                     array.batch.size = 100,
                                      learning.rate = 0.05,
                                      momentum = 0.9,
+                                     wd = 0.00001,
                                      eval.metric = mx.metric.accuracy,
                                      epoch.end.callback = mx.callback.log.train.metric(100))
 
