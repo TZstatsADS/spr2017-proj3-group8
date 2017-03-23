@@ -87,9 +87,10 @@ best_ntree <- 300
 
 # train the model with the entire training set
 load(paste("../../output/extracted.pca", best_pca_thre, ".RData"))
-tm_train <- system.time(fit_train <- rf_train(dat_train = pca_thre, label_train = label, ntree = best_ntree))
-save(fit_train, file="../../output/fit_train_rf.RData")
+tm_train_rf <- system.time(fit_train <- rf_train(dat_train = pca_thre, label_train = label, ntree = best_ntree))
+save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 
-
-
+### Make prediction 
+tm_test_rf <- system.time(pred_test <- rf_test(fit_train, dat_test))
+save(pred_test_rf, file="../../output/pred_test_rf.RData")
