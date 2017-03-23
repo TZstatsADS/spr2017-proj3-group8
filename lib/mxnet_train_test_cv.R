@@ -3,6 +3,51 @@ drat:::addRepo("dmlc")
 install.packages("mxnet")
 library("mxnet")
 
+# Load images
+#-------------------------------------------------------------------------------
+image_dir <- "../data/raw_images"
+source("https://bioconductor.org/biocLite.R")
+biocLite("EBImage")
+
+library(EBImage)
+
+width <- 28
+height <- 28
+## pbapply is a library to add progress bar *apply functions
+## pblapply will replace lapply
+install.packages("pbapply")
+library(pbapply)
+extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = TRUE) {
+  img_size <- width*height
+  ## List images in path
+  images_names <- list.files(dir_path)
+    print(paste("Start processing", length(images_names), "images"))
+  ## This function will resize an image, turn it into greyscale
+  feature_list <- pblapply(images_names, function(imgname) {
+    ## Read image
+    img <- readImage(file.path(dir_path, imgname))
+    ## Resize image
+    img_resized <- resize(img, w = width, h = height)
+    ## Get the image as a matrix
+    img_matrix <- img_resized@.Data
+    ## Coerce to a vector
+    img_vector <- as.vector(t(img_matrix))
+    return(img_vector)
+  })
+  ## bind the list of vector into matrix
+  feature_matrix <- do.call(rbind, feature_list)
+  feature_matrix <- as.data.frame(feature_matrix)
+  ## Set names
+  names(feature_matrix) <- paste0("pixel", c(1:img_size))
+  if (add_label) {
+    ## Add label
+    feature_matrix <- cbind(label = label, feature_matrix)
+  }
+  return(feature_matrix)
+}
+
+df <- extract_feature(dir_path = image_dir, width = width, height = height)
+
 
 # Load data(sift_features) and label
 #-------------------------------------------------------------------------------
@@ -15,6 +60,8 @@ label <- fread("../data/labels.csv")
 label <- c(t(label))
 feature <- tbl_df(t(feature)) 
 complete_set <- cbind(label, feature)
+
+complete_set <- df
 
 
 # Split data into training and test
@@ -38,13 +85,13 @@ train_data <- data.matrix(train_set)
 train_x <- t(train_data[, -1])
 train_y <- train_data[,1]
 train_array <- train_x
-dim(train_array) <- c(1, 5000, 1, ncol(train_x))
+dim(train_array) <- c(28, 28, 1, ncol(train_x))
 
 test_data <- data.matrix(test_set)
 test_x <- t(test_set[,-1])
 test_y <- test_set[,1]
 test_array <- test_x
-dim(test_array) <- c(1, 5000, 1, ncol(test_x))
+dim(test_array) <- c(28, 28, 1, ncol(test_x))
 
 
 # Set up the symbolic model
