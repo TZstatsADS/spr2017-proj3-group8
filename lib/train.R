@@ -1,37 +1,17 @@
-#########################################################
-### Train a classification model with training images ###
-#########################################################
+######################################################
+######### Overall Project Train Script ###############
+######################################################
 
-### Author: Yuting Ma
-### Project 3
-### ADS Spring 2016
+# load functions from the models
+source("gbm/gbm.R")
+source("Neural_Net/NN_train_test_cv.R")
+source("Random_Forest_PCA/random forest_train_test_cv.R")
+source("Conv_Neural_Net/mxnet_train_test_cv.R")
 
 
-train <- function(dat_train, label_train, par=NULL){
-  
-  ### Train a Gradient Boosting Model (GBM) using processed features from training images
-  
-  ### Input: 
-  ###  -  processed features from images 
-  ###  -  class labels for training images
-  ### Output: training model specification
-  
-  ### load libraries
-  library("gbm")
-  
-  ### Train with gradient boosting model
-  if(is.null(par)){
-    depth <- 3
-  } else {
-    depth <- par$depth
-  }
-  fit_gbm <- gbm.fit(x=dat_train, y=label_train,
-                     n.trees=2000,
-                     distribution="bernoulli",
-                     interaction.depth=depth, 
-                     bag.fraction = 0.5,
-                     verbose=FALSE)
-  best_iter <- gbm.perf(fit_gbm, method="OOB", plot.it = FALSE)
-
-  return(list(fit=fit_gbm, iter=best_iter))
+overall_train <- function(dat_train, cnn_train_data, label_train) {
+  fit_train_gbm <- gbm_train(dat_train, label_train)
+  fit_train_nn <- nn_train(train = dat_train, y = label_train)
+  fit_train_rf <- rf_pca_train(dat_train, label_train)
+  fit_train_cnn <- cnn_train(train_x = cnn_train_data, train_y = label_train)
 }
