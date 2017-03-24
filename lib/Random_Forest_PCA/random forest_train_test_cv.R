@@ -31,7 +31,7 @@ rf_train <- function(dat_train, label_train, ntree=500,
 
 # Random Forest: Test
 rf_test <- function(fit_train, dat_test, saveFile=FALSE){
-  
+
   rf_predict <- predict(fit_train, dat_test)$predictions
   
   if (saveFile == TRUE){
