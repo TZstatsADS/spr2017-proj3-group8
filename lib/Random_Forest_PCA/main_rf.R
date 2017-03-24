@@ -3,7 +3,6 @@
 
 # Load functions
 source("random forest_train_test_cv.R")
-source("../PCA.R")
 
 
 # Load features and label
