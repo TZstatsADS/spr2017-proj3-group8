@@ -6,7 +6,7 @@ rf_train <- function(dat_train, label_train, ntree=500,
   
   library(ranger)
   library(dplyr)
-  
+  #browser()
   train <- data.frame(dat_train) %>% mutate(label=factor(label_train))
 
   if (ranger==TRUE){
@@ -61,7 +61,7 @@ rf_cv <- function(dat_train, label_train, K=5, ntree=500){
     test.label <- label_train[s == i]
     
     rf_fit <- rf_train(dat_train = train.data, label_train = train.label, ntree = ntree)
-
+#browser()
     rf_predict <- rf_test(fit_train = rf_fit, dat_test = test.data)
     
     cv.error[i] <- mean(rf_predict != test.label)

@@ -11,13 +11,13 @@ library(dplyr)
 feature <- fread("../../output/hog_feature+sift.csv", header = TRUE)
 label <- fread("../../data/labels.csv")
 label <- c(t(label))
-feature <- tbl_df(t(feature)) 
+feature <- tbl_df(feature) 
 
 
 ######### Tuning parameters #########
 
 # Tune parameter for random forest: ntree
-ntree <- seq(10, 400, by=20) 
+ntree <- seq(10, 400, by=90) 
 
 
 err_cv_rf <- c()
@@ -26,7 +26,7 @@ err_sd_rf <- c()
   
 for (j in 1:length(ntree)){
   cat("j=", j, "\n")
-  result <- rf_cv(dat_train = pca_thre, label_train = label, K = 5, ntree = ntree[j])
+  result <- rf_cv(dat_train = feature, label_train = label, K = 5, ntree = ntree[j])
   err_cv_rf[j] <- result[1]
   err_sd_rf[j] <- result[2]
 }
@@ -42,7 +42,7 @@ plot(x=ntree, y=err_cv_rf, type="l", ylab="error rate",main="Random Forest")
 dev.off()
 
 # Choose the best parameter value from visualization
-best_ntree <- 350
+best_ntree <- 300
 
 
 ############# Retrain model with tuned parameters ##############
@@ -53,7 +53,7 @@ save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 
 ### Make prediction 
-tm_test_rf <- system.time(pred_test_rf <- rf_test(fit_train = fit_train_rf, dat_test = pc_test))
+tm_test_rf <- system.time(pred_test_rf <- rf_test(fit_train = fit_train_rf, dat_test=feature))
 save(pred_test_rf, file="../../output/pred_test_rf.RData")
 
 
