@@ -5,8 +5,8 @@ library(mxnet)
 
 # Load images
 #-------------------------------------------------------------------------------
-# image_dir <- "../data/raw_images"
-image_dir <- "../train"
+image_dir <- "../data/raw_images"
+#image_dir <- "../train"
 
 
 source("https://bioconductor.org/biocLite.R")
@@ -22,14 +22,14 @@ extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = 
   ## List images in path
   images_names <- list.files(dir_path)
   
-  ### comment out later
-  if (add_label) {
-    ## Select only cats or dogs images
-    images_names <- images_names[grepl(ifelse(is_cat, "cat", "dog"), images_names)]
-    ## Set label, cat = 0, dog = 1
-    label <- ifelse(is_cat, 0, 1)
-  }  
-  #####################
+#   ### comment out later
+#   if (add_label) {
+#     ## Select only cats or dogs images
+#     images_names <- images_names[grepl(ifelse(is_cat, "cat", "dog"), images_names)]
+#     ## Set label, cat = 0, dog = 1
+#     label <- ifelse(is_cat, 0, 1)
+#   }  
+#   #####################
   
   
   print(paste("Start processing", length(images_names), "images"))
@@ -67,31 +67,31 @@ extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = 
 }
 
 
-width <- 72
-height <- 72
-cats_data <- extract_feature(dir_path = image_dir, width = width, height = height)
-dogs_data <- extract_feature(dir_path = image_dir, width = width, height = height, is_cat = FALSE)
+width <- 100
+height <- 100
+# cats_data <- extract_feature(dir_path = image_dir, width = width, height = height)
+# dogs_data <- extract_feature(dir_path = image_dir, width = width, height = height, is_cat = FALSE)
 
-dim(cats_data)
-dim(dogs_data)
+# dim(cats_data)
+# dim(dogs_data)
 
-saveRDS(cats_data, "cat2.rds")
-saveRDS(dogs_data, "dog2.rds")
+# saveRDS(cats_data, "cat2.rds")
+# saveRDS(dogs_data, "dog2.rds")
 
 # # Load data(sift_features) and label
 # #-------------------------------------------------------------------------------
-# install.packages("data.table")
-# install.packages("dplyr")
-# library(data.table)
-# library(dplyr)
+install.packages("data.table")
+install.packages("dplyr")
+library(data.table)
+library(dplyr)
 # feature <- fread("../output/sift_features/sift_features.csv", header = TRUE)
-# label <- fread("../data/labels.csv")
-# label <- c(t(label))
+label <- fread("../data/labels.csv")
+label <- c(t(label))
 # feature <- tbl_df(t(feature)) 
 # complete_set <- cbind(label, feature)
 
-# df <- extract_feature(dir_path = image_dir, width = width, height = height)
-# complete_set <- df
+df <- extract_feature(dir_path = image_dir, width = width, height = height)
+complete_set <- df
 
 
 # Split data into training and test
@@ -99,7 +99,7 @@ saveRDS(dogs_data, "dog2.rds")
 install.packages("caret")
 library(caret)
 ## Bind rows in a single dataset
-complete_set <- rbind(cats_data, dogs_data)
+# complete_set <- rbind(cats_data, dogs_data)
 
 ## test/training partitions
 training_index <- createDataPartition(complete_set$label, p = .8, times = 1)
@@ -117,13 +117,13 @@ train_data <- data.matrix(train_set)
 train_x <- t(train_data[, -1])
 train_y <- train_data[,1]
 train_array <- train_x
-dim(train_array) <- c(72, 72, 1, ncol(train_x))
+dim(train_array) <- c(width, height, 1, ncol(train_x))
 
 test_data <- data.matrix(test_set)
 test_x <- t(test_set[,-1])
 test_y <- test_set[,1]
 test_array <- test_x
-dim(test_array) <- c(72, 72, 1, ncol(test_x))
+dim(test_array) <- c(width, height, 1, ncol(test_x))
 
 
 # Set up the symbolic model
@@ -165,21 +165,31 @@ model <- mx.model.FeedForward.create(NN_model,
                                      X = train_array,
                                      y = train_y,
                                      ctx = devices,
-                                     num.round = 60,
-                                     array.batch.size = 100,
-                                     learning.rate = 0.05,
+                                     num.round = 30,
+                                     array.batch.size = 50,
+                                     learning.rate = 0.01,
                                      momentum = 0.9,
                                      wd = 0.00001,
                                      eval.metric = mx.metric.accuracy,
                                      epoch.end.callback = mx.callback.log.train.metric(100))
 
 
+# logistic model to test
+# ------------------------------------------------------------------------------
+
+# logModel <- glm(label ~ ., family = binomial, data = train_set)
+
+
 # Test
 #-------------------------------------------------------------------------------
 ## Test test set
 predict_probs <- predict(model, test_array)
+#predict_probs <- predict(logModel, test_set[, -1])
 predicted_labels <- max.col(t(predict_probs)) - 1
 table(test_data[, 1], predicted_labels)
 
 ## accuracy rate
 sum(diag(table(test_data[, 1], predicted_labels)))/nrow(test_set)
+
+
+
