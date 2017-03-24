@@ -1,33 +1,43 @@
-######################################################
-######### Overall Project Train Script ###############
-######################################################
+### Source models
 
-# load functions from the models
-source("gbm/gbm.R")
-source("Neural_Net/NN_train_test_cv.R")
-source("Random_Forest_PCA/random forest_train_test_cv.R")
-source("Conv_Neural_Net/mxnet_train_test_cv.R")
+source("../lib/Neural_Net/NN_train_test_cv.R")
+source("../lib/gbm/gbm.R")
+source("../lib/Random_Forest_PCA/random forest_train_test_cv.R")
 
-load("trained_models.RData")
-model <- mx.model.load(prefix = "../output/mxnet_FULL_model", iteration = 1)
 
-overall_test <- function(dat_test, cnn_test_data) {
-  pred_gbm <- gbm_test(fit_train_gbm$fit, dat_test)
-  pred_nn <- nn_test(fit_train_nn, dat_test)
-  pred_rf <- rf_test(fit_train_rf, dat_test)
-  pred_cnn <- cnn_test(model, cnn_test_data)
+test <- function(dat_test){
+  library(data.table)
+  library(dplyr)
+  library(ranger)
+  library(neuralnet)
+  library(gbm)
   
-
-  # accuracy of gbm, nn, rf, cnn
-  sum <- .098 + .135 + .14 + .17
-  accuracy <- c(.098, .135, .14, .17)
-  accuracy <- accuracy / sum
+  #Load trained baseline model (JUST SIFT FEATURES) with known parameters
+  load("../output/fit_train_gbm.RData")
+  gbm_model <- fit_train_gbm$fit
+  fit_train_gbm <- NA
   
-  results <- data.frame(gbm = pred_gbm,
-                nn = pred_nn,
-                rf = pred_rf,
-                cnn = pred_cnn)
+  #Load trained models (new features) with known parameters
+  load("../output/fit_train_rf.RData")
+  rf_model_hs <- fit_train_rf
+  load("../output/fit_train_gbm_hog.RData")
+  gbm_model_hs <- fit_train_gbm_hog$fit
+  nn_model_hs <- nn_train(train=feature_hs, y=label, hiddenLayers=2)
   
-  final_pred <- rowSums(t(t(results) * accuracy))
-  return(as.numeric(final_pred> 0.5))
+  #Test model (Baseline)
+  preds_s <- gbm_test(fit_train=gbm_model, dat_test=dat_test)
+  
+  #Test Model (improved model, including hog features)
+  rf_preds  <- as.numeric(rf_test(fit_train=rf_model_hs, dat_test=dat_test))-1
+  nn_preds  <- as.numeric(nn_test(nn=nn_model_hs, test=dat_test))
+  gbm_preds <- as.numeric(gbm_test(fit_train=gbm_model_hs, dat_test=dat_test))
+  
+  preds_hs <- rbind(rf_preds,nn_preds,gbm_preds)
+  preds_hs <- round(colMeans(preds_hs),0)
+  
+  #Save predictions to dataframe provided and export
+  testLabels$`Baseline (0 for chicken, 1 for dog)` <- preds_s
+  testLabels$Advanced <- preds_hs
+  
+  write.csv(testLabels, "../output/labels.csv")
 }
