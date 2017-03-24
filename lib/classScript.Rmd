@@ -1,0 +1,95 @@
+---
+title: "Project 3 Class Script"
+author: "Group 8 "
+date: "March 24, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Source models
+
+```{r}
+source("Neural_Net/NN_train_test_cv.R")
+source("gbm/gbm.R")
+source("Random_Forest_PCA/random forest_train_test_cv.R")
+```
+
+# Load train features for NN
+
+```{r}
+# Train Features
+feature_hs <- read.csv("../output/hog_feature+sift.csv", header = TRUE)
+label <- fread("../data/labels.csv")
+label <- c(t(label))
+```
+
+### Load in Data
+```{r}
+library(data.table)
+library(dplyr)
+library(ranger)
+library(neuralnet)
+library(gbm)
+
+# Test Features
+
+ test_feature_hs <- sample(1:2000, 400)
+ test_label_hs <- label[test_feature_hs]
+ test_feature_hs <- feature_hs[test_feature_hs,]
+
+test_features_hs <- read.csv("../output/test_hog_feature+sift.csv", header = TRUE)
+test_feature_s <- read.csv("../output/sift_features/test_sift_features.csv", header = TRUE)
+test_feature_s <- as.data.frame(t(test_feature_s))
+```
+
+### Load trained baseline model (JUST SIFT FEATURES) with known parameters
+
+```{r}
+### INPUT:
+# GBM:  depth = 5
+
+# Load Original models
+
+load("../output/fit_train_gbm.RData")
+gbm_model <- fit_train_gbm$fit
+fit_train_gbm <- NA
+```
+
+### Load trained models (new features) with known parameters
+
+```{r}
+### INPUT:
+# NN:   hiddenLayers = 2
+# RF:   best_pca_thre <- 0.2
+#       best_ntree <- 350
+# GBM:  depth = 9
+
+# Load New Feature models
+
+load("../output/fit_train_rf.RData")
+rf_model_hs <- fit_train_rf
+load("../output/fit_train_gbm_hog.RData")
+gbm_model_hs <- fit_train_gbm_hog$fit
+nn_model_hs <- nn_train(train=feature_hs, y=label, hiddenLayers=2)
+
+```
+
+### Test model (baseline model, just sift features)
+
+```{r}
+preds_s <- gbm_test(fit_train=gbm_model, dat_test=test_feature_s)
+```
+
+### Test Model (improved model, including hog features)
+
+```{r}
+rf_preds <- rf_test(fit_train=rf_model_hs, dat_test=test_feature_hs)
+nn_preds <- nn_test(nn=nn_model_hs, test=test_feature_hs)
+gbm_preds <- gbm_test(fit_train=gbm_model_hs, dat_test=test_feature_hs)
+
+preds_hs <- rbind(rf_preds,nn_preds,gbm_preds)
+preds_hs <- round(colMeans(preds),0)
+```

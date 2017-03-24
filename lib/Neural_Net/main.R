@@ -55,9 +55,8 @@ fit_train_nn <- nn_train(train = feature, y = label, hiddenLayers = hiddenLayers
 fit_train_nn_origFeat <- nn_train(train = feature_orig, y = label, hiddenLayers = hiddenLayers_origFeat)
 save(fit_train_nn, file="../../output/fit_train_nn.RData")
 
-# qq <- nn_cv(feature, label, K=5, hiddenLayers=2)
-qq <- nn_cv(feature_orig, label, K=5, hiddenLayers=5)
-
+qq <- nn_cv(feature, label, K=5, hiddenLayers=2)
+#qq <- nn_cv(feature_orig, label, K=5, hiddenLayers=5)
 
 ### Make prediction 
 # ?? fit_train_nn <- file("../../output/fit_train_nn.RData")
