@@ -17,8 +17,8 @@ Term: Spring 2017
 	
 **Contribution statement**: ([default](doc/a_note_on_contributions.md)) All team members contributed equally in all stages of this project. All team members approve our work presented in this GitHub repository including this contributions statement. 
 + Ken Chew
-	+ Ensemble different methods and generate main.R
-	+ Explore Neural Network Method
+	+ Ensemble different methods and generate main.R, test.R, train.R
+	+ Implemented Convolutional Neural Network Method
 
 + Sean Reddy
 	+ Train, tune and test Neural Network model based on SIFT and HoG
@@ -35,7 +35,7 @@ Term: Spring 2017
 	+ Train, tune and test GBM model based on SIFT and HoG
 	+ Organize and document GitHub
 
-**Contribution statement**: ([default](doc/a_note_on_contributions.md)) Yue Jin developed baseline classification model for evaluation. Yifei Lin and Yini Zhang explored feature engineering for improving the model performance. Sean Reddy, Yini Zhang and Yue Jin designed the model evaluation and carried out the computation for model evaluation. Ken Chew explored Neural Network and produced the ensemble of all the models. All team members contributed to the GitHub repository. Yue Jin organized and documented the GitHub repository. Yifei Lin prepared the presentation. All team members approve our work presented in our GitHub repository including this contribution statement.
+**Contribution statement**: ([default](doc/a_note_on_contributions.md)) Yue Jin developed baseline classification model for evaluation. Yifei Lin and Yini Zhang explored feature engineering for improving the model performance. Sean Reddy, Yini Zhang and Yue Jin designed the model evaluation and carried out the computation for model evaluation. Ken Chew implemented Convolutional Neural Network and produced the overall training and test files which includes the ensemble of all the models. All team members contributed to the GitHub repository. Yue Jin organized and documented the GitHub repository. Yifei Lin prepared the presentation. All team members approve our work presented in our GitHub repository including this contribution statement.
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 

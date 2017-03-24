@@ -40,7 +40,7 @@ height <- 128
 label <- read.csv("../data/labels.csv")
 colnames(label) <- "label"
 complete_set <- extract_feature(dir_path = image_dir, 
-                                data_name = "128X128"
+                                data_name = "128X128",
                                 width = width, 
                                 height = height)
 
@@ -161,7 +161,8 @@ cnn_test <- function(model, test_array, saveFile=FALSE) {
     
   ## accuracy rate
   accuracy <- sum(diag(table(test_data[, 1], predicted_labels)))/nrow(test_data)
-  return(accuracy)
+  accuracy
+  return(predicted_labels)
 }
 
 cnn_test(model, test_array, saveFile = T)

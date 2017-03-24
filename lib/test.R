@@ -1,26 +1,33 @@
 ######################################################
-### Fit the classification model with testing data ###
+######### Overall Project Train Script ###############
 ######################################################
 
-### Author: Yuting Ma
-### Project 3
-### ADS Spring 2016
+# load functions from the models
+source("gbm/gbm.R")
+source("Neural_Net/NN_train_test_cv.R")
+source("Random_Forest_PCA/random forest_train_test_cv.R")
+source("Conv_Neural_Net/mxnet_train_test_cv.R")
 
-test <- function(fit_train, dat_test){
+load("trained_models.RData")
+model <- mx.model.load(prefix = "../output/mxnet_FULL_model", iteration = 1)
+
+overall_test <- function(dat_test, cnn_test_data) {
+  pred_gbm <- gbm_test(fit_train_gbm$fit, dat_test)
+  pred_nn <- nn_test(fit_train_nn, dat_test)
+  pred_rf <- rf_test(fit_train_rf, dat_test)
+  pred_cnn <- cnn_test(model, cnn_test_data)
   
-  ### Fit the classfication model with testing data
+
+  # accuracy of gbm, nn, rf, cnn
+  sum <- .098 + .135 + .14 + .17
+  accuracy <- c(.098, .135, .14, .17)
+  accuracy <- accuracy / sum
   
-  ### Input: 
-  ###  - the fitted classification model using training data
-  ###  -  processed features from testing images 
-  ### Output: training model specification
+  results <- data.frame(gbm = pred_gbm,
+                nn = pred_nn,
+                rf = pred_rf,
+                cnn = pred_cnn)
   
-  ### load libraries
-  library("gbm")
-  
-  pred <- predict(fit_train$fit, newdata=dat_test, 
-                  n.trees=fit_train$iter, type="response")
-  
-  return(as.numeric(pred> 0.5))
+  final_pred <- rowSums(t(t(results) * accuracy))
+  return(as.numeric(final_pred> 0.5))
 }
-
