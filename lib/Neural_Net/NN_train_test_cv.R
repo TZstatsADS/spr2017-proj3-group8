@@ -1,6 +1,6 @@
 # Neural Network: Train
 
-nn_train <- function(train, y, hiddenLayers=5, saveFile=FALSE){
+nn_train <- function(train, y, hiddenLayers=2, saveFile=FALSE){
   
   library(dplyr)
   library(neuralnet)

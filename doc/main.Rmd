@@ -1,14 +1,21 @@
 ---
-title: "Project 3 - Example Main Script"
-author: "Yuting Ma, Tian Zheng"
-date: "February 24, 2016"
+title: "Project 3 - Labradoodle v.s. Fried Chicken"
+author: "Group 8"
+date: "March 24, 2017"
 output:
   pdf_document: default
   html_document: default
 ---
-In your final repo, there should be an R markdown file that organizes **all computational steps** for evaluating your proposed image classification framework. 
+### Team Members   
+* Ken Chew  
+* Yue Jin  
+* Yifei Lin  
+* Sean Reddy  
+* Yini Zhang  
 
-This file is currently a template for running evaluation experiments of image analysis (or any predictive modeling). You should update it according to your codes but following precisely the same structure. 
+### Project Summary
+* In this project, we implemented the Gradient Boosting Machine (GBM), Random Forest, Neural Network and Convol to generate a classification engine for grayscale images of poodles versus images of fried chickens. 
+* To further improve the prediction performance, besides the provided SIFT descriptors, we also used Histogram of Oriented Gradients descriptors to train the model.
 
 ```{r}
 if(!require("EBImage")){
@@ -20,29 +27,57 @@ if(!require("gbm")){
   install.packages("gbm")
 }
 
+if(!require("data.table")){
+  install.packages("data.table")
+}
+if(!require("dplyr")){
+  install.packages("dplyr")
+}
+if(!require("ggplot2")){
+  install.packages("ggplot2")
+}
+if(!require("ranger")){
+  install.packages("ranger")
+}
+if(!require("drat")){
+  install.packages("drat", repos="https://cran.rstudio.com")
+}
+if(!require("mxnet")){
+  install.packages("mxnet")
+}
+if(!require("stringi")){
+  install.packages("stringi")
+}
+if(!require("caret")){
+  install.packages("caret")
+}
+if(!require("pbapply")){
+  install.packages("pbapply")
+}
+library()
+library("drat")
+library("mxnet")
+library("stringi")
+library("caret")
+library("pbapply")
+library("ggplot2")
+library("ranger")
+library("data.table")
+library("dplyr")
 library("EBImage")
 library("gbm")
 ```
 
 ### Step 0: specify directories.
 
-Set the working directory to the image folder. Specify the training and the testing set. For data without an independent test/validation set, you need to create your own testing data by random subsampling. In order to obain reproducible results, set.seed() whenever randomization is used. 
-
 ```{r wkdir, eval=FALSE}
-setwd("./ads_spr2017_proj3") 
-# here replace it with your own path or manually set it in RStudio to where this rmd file is located. 
+setwd("./spr2017-proj3-group8") 
 ```
 
-Provide directories for raw images. Training set and test set should be in different subfolders. 
-```{r}
-experiment_dir <- "../data/zipcode/" # This will be modified for different data sets.
-img_train_dir <- paste(experiment_dir, "train/", sep="")
-img_test_dir <- paste(experiment_dir, "test/", sep="")
-```
 
 ### Step 1: set up controls for evaluation experiments.
 
-In this chunk, ,we have a set of controls for the evaluation experiments. 
+In this chunk, ,we have a set of controls for the evaluation experiments for all four models
 
 + (T/F) cross-validation on the training set
 + (number) K, the number of CV folds
@@ -58,54 +93,28 @@ run.test=TRUE # run evaluation on an independent test set
 run.feature.test=TRUE # process features for test set
 ```
 
-Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. In this example, we use GBM with different `depth`. In the following chunk, we list, in a vector, setups (in this case, `depth`) corresponding to models that we will compare. In your project, you maybe comparing very different classifiers. You can assign them numerical IDs and labels specific to your project. 
+Using cross-validation or independent test set evaluation, we compare the performance of different classifiers or classifiers with different specifications. In this example, we use GBM with different `depth`, Random Forest with different PCA_Threshold + Number of trees, Neural Network with different Number of hidden layer, CNN with different Number of rounds () (numver of iteration)+ batch size(50)nunber of obs use each round + learn rate (0.01) (smaller - longer time to learn )
 
-```{r model_setup}
-model_values <- seq(3, 11, 2)
-model_labels = paste("GBM with depth =", model_values)
-```
 
-### Step 2: import training images class labels.
 
-For the example of zip code digits, we code digit 9 as "1" and digit 7 as "0" for binary classification.
+### Step 2: construct visual feature
 
-```{r train_label}
-label_train <- read.table(paste(experiment_dir, "train_label.txt", sep=""),
-                          header=F)
-label_train <- as.numeric(unlist(label_train) == "9")
-```
+* In addition to 5000 sift features, we used Histogram of Oriented Gradients (HOG) method to generate 448 extra new features   
+* HOG + a feature descriptor used in computer vision and image processing for the purpose of object detection + it counts occurrences of gradient orientation in localized portions of an image + it is computed on a dense grid of uniformly spaced cells and uses overlapping local contrast normalization for improved accuracy
 
-### Step 3: construct visual feature
-
-For this simple example, we use the row averages of raw pixel values as the visual features. Note that this strategy **only** works for images with the same number of rows. For some other image datasets, the feature function should be able to handle heterogeneous input images. Save the constructed features to the output subfolder.
-
-`feature.R` should be the wrapper for all your feature engineering functions and options. The function `feature( )` should have options that correspond to different scenarios for your project and produces an R object that contains features that are required by all the models you are going to evaluate later. 
 
 ```{r feature}
-source("../lib/feature.R")
+source("../lib/hog_feature.R")
 
-tm_feature_train <- NA
-if(run.feature.train){
-  tm_feature_train <- system.time(dat_train <- feature(img_train_dir, 
-                                                       "train", 
-                                                       data_name="zip", 
-                                                       export=TRUE))
-}
-
-tm_feature_test <- NA
-if(run.feature.test){
-  tm_feature_test <- system.time(dat_test <- feature(img_test_dir, 
-                                                     "test", 
-                                                     data_name="zip", 
-                                                     export=TRUE))
-}
 
 #save(dat_train, file="./output/feature_train.RData")
 #save(dat_test, file="./output/feature_test.RData")
 ```
 
-### Step 4: Train a classification model with training images
-Call the train model and test model from library. 
+Note: We were unable to push all raw images in github. So we generate new set of feature and put them under lib as a csv file
+
+
+### Call the train model and test model from library. 
 
 `train.R` and `test.R` should be wrappers for all your model training steps and your classification/prediction steps. 
 + `train.R`
@@ -121,72 +130,359 @@ source("../lib/train.R")
 source("../lib/test.R")
 ```
 
-#### Model selection with cross-validation
-* Do model selection by choosing among different values of training model parameters, that is, the interaction depth for GBM in this example. 
+### Step 3: Baseline GBM
+
 ```{r runcv, message=FALSE, warning=FALSE}
-source("../lib/cross_validation.R")
+sift_hog<-fread("../output/hog_feature+sift.csv")
+sift<-fread("../output/sift_features/sift_features.csv",header=TRUE)
+sift<-unlist(t(sift))
 
-if(run.cv){
-  err_cv <- array(dim=c(length(model_values), 2))
-  for(k in 1:length(model_values)){
-    cat("k=", k, "\n")
-    err_cv[k,] <- cv.function(dat_train, label_train, model_values[k], K)
+
+label <- read.table("../data/labels.csv",header=T)
+label <- unlist(label)
+label_train<-label
+dat_train<-sift
+hog_train<-sift_hog
+
+# Train the model and tune parameters
+library("gbm")
+depth_values<-c(1,3,5,7,9)
+err_cv<-matrix(nrow=length(depth_values), ncol=2)
+
+K=5
+for(k in 1:length(depth_values)){
+  err_cv[k,] <- gbm_cv(dat_train, label_train, K=K,depth=depth_values[k])
+}
+
+write.csv(err_cv, file="../output/err_cv_gbm.csv")
+
+plot(depth_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
+     main="Cross Validation Error",type="l",ylim=c(0,0.4))
+
+depth_best1 <- depth_values[which.min(err_cv[,1])]
+
+# best depth is 5
+fit_train_gbm<-gbm_train(dat_train, label_train,depth=depth_best1)
+pred_test1<-as.numeric(gbm_test(fit_train_gbm,dat_train)>0.5)
+
+
+########################################################
+# Train the model and tune parameters with hog features
+err_cv_hog<-matrix(nrow=length(depth_values), ncol=2)
+
+K=5
+for(k in 1:length(depth_values)){
+  err_cv_hog[k,] <- gbm_cv(hog_train, label_train, K=K,depth=depth_values[k])
+}
+
+
+
+write.csv(err_cv_hog , file="../output/err_cv_gbm_hog.csv")
+
+plot(depth_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
+     main="Cross Validation Error",type="l",ylim=c(0,0.4))
+
+depth_best2 <- depth_values[which.min(err_cv[,1])]
+# best depth = 9
+
+# Use the optimal model to fit the whole training data set and test the model 
+
+
+fit_train_gbm_hog<-gbm_train(hog_train, label_train,depth=depth_best2)
+pred_test2<-as.numeric(gbm_test(fit_train_gbm_hog,hog_train)>0.5)
+
+# Error rate
+mean(pred_test1!=label_train)
+mean(pred_test2!=label_train)
+# 0.2355 & 0.098
+```
+
+
+### Step 4: Random Forest 
+
+```{r}
+# Set directory
+
+
+# Load functions
+source("random forest_train_test_cv.R")
+
+
+# Load features and label
+library(data.table)
+library(dplyr)
+feature <- fread("../../output/hog_feature+sift.csv", header = TRUE)
+label <- fread("../../data/labels.csv")
+label <- c(t(label))
+feature <- tbl_df(feature) 
+
+
+######### Tuning parameters #########
+
+# Tune parameter for random forest: ntree
+ntree <- seq(10, 400, by=90) 
+
+
+err_cv_rf <- c()
+err_sd_rf <- c()
+
+  
+for (j in 1:length(ntree)){
+  cat("j=", j, "\n")
+  result <- rf_cv(dat_train = feature, label_train = label, K = 5, ntree = ntree[j])
+  err_cv_rf[j] <- result[1]
+  err_sd_rf[j] <- result[2]
+}
+  
+
+# Save results
+save(err_cv_rf, file="../../output/err_cv_rf.RData")
+save(err_sd_rf, file="../../output/err_sd_rf.RData") 
+
+# Visualize CV results
+png(filename=paste("../../figs/cv_result_rf.png"))
+plot(x=ntree, y=err_cv_rf, type="l", ylab="error rate",main="Random Forest")
+dev.off()
+
+# Choose the best parameter value from visualization
+best_ntree <- 300
+
+
+############# Retrain model with tuned parameters ##############
+
+# train the model with the entire training set
+tm_train_rf <- system.time(fit_train_rf <- rf_train(dat_train=feature, label_train=label, ntree=best_ntree))
+save(fit_train_rf, file="../../output/fit_train_rf.RData")
+
+
+### Make prediction 
+tm_test_rf <- system.time(pred_test_rf <- rf_test(fit_train = fit_train_rf, dat_test=feature))
+save(pred_test_rf, file="../../output/pred_test_rf.RData")
+
+
+```
+
+### Step 5: Nerual Network
+```{r}
+# Load features and label
+feature <- read.csv("../../output/hog_feature+sift.csv", header = TRUE)
+label <- fread("../../data/labels.csv")
+label <- c(t(label))
+
+######### Tuning parameters #########
+
+#### Ignore this section if optimal training parameter for hidden layers already known
+#### hiddenLayers_origFeat <- 5
+#### hiddenLayers_newFeat <- 3
+#### As found in our tuning shown belown
+
+# Tune parameter number of hidden layers
+
+layers <- c(1,2,5,10,20,40,100)
+
+cv <- vector("list", length(layers))
+i <- 1
+impr <- TRUE
+
+while (i < length(cv)) {
+  cv[[i]] <- nn_cv(feature, label, K=5, hiddenLayers=layers[i])
+  i = i+1
+}
+
+q <- unlist(cv)
+q2 <- q[c(TRUE,FALSE)]
+plot(q2, type='l')
+
+
+# Visualize CV results
+q <- unlist(cv)
+q2 <- q[c(TRUE,FALSE)]
+plot(y=q2, x=layers[1:6], type='l', xlab="Number of Neurons in Hidden Layer", ylab="5-Fold Avg CV Error")
+png(filename=paste("../../figs/cv_result_nn.png"))
+dev.off()
+
+dev.print(png, "../../figs/cv_result_nn.png", width=500, height=400)
+
+####
+#### Begin here if known training parameter
+####
+
+# Choose the best parameter value from visualization
+
+hiddenLayers_origFeat <- 5
+hiddenLayers_newFeat <- 3
+
+# train the model with the entire training set
+fit_train_nn <- nn_train(train = feature, y = label, hiddenLayers = hiddenLayers_newFeat)
+save(fit_train_nn, file="../../output/fit_train_nn.RData")
+
+# qq <- nn_cv(feature, label, K=5, hiddenLayers=3)
+
+
+### Make prediction 
+# ?? fit_train_nn <- file("../../output/fit_train_nn.RData")
+pred_test_nn <- nn_test(fit_train_nn, testData)
+save(pred_test_nn, file="../../output/pred_test_nn.RData")
+
+```
+
+### Step 6: Convolutional Neural Network
+```{r}
+# If not starting from scratch, load files from output
+# --------------------------------------------------------------
+load(file = "../../output/rawfeature_128X128.RData")
+complete_set <- feature_matrix
+
+## for 80% of data
+load(file = "../../output/train_data.rda")
+load(file = "../../output/test_data.rda")
+
+
+# Load images as raw pixels
+#-------------------------------------------------------------------------------
+image_dir <- "../data/raw_images"
+
+width <- 128
+height <- 128
+
+label <- read.csv("../data/labels.csv")
+colnames(label) <- "label"
+complete_set <- extract_feature(dir_path = image_dir, 
+                                data_name = "128X128"
+                                width = width, 
+                                height = height)
+
+
+# Split data into training and test and export files
+#-------------------------------------------------------------------------------
+library(caret)
+
+## test/training partitions
+training_index <- createDataPartition(complete_set$label, p = .8, times = 1)
+training_index <- unlist(training_index)
+train_set <- complete_set[training_index,]
+dim(train_set)
+train_data <- data.matrix(train_set)
+save(train_data, file = "../output/train_data.rda")
+
+test_set <- complete_set[-training_index,]
+dim(test_set)
+test_data <- data.matrix(test_set)
+save(test_data, file = "../output/test_data.rda")
+
+# Put data into format for model (train/test)
+#-------------------------------------------------------------------------------
+## Fix train and test datasets
+
+train_x <- t(train_data[, -1])
+train_y <- train_data[,1]
+train_array <- train_x
+dim(train_array) <- c(width, height, 1, ncol(train_x))
+
+
+test_x <- t(test_data[,-1])
+test_y <- test_data[,1]
+test_array <- test_x
+dim(test_array) <- c(width, height, 1, ncol(test_x))
+
+
+# Put data into format for model (FULL)
+#-------------------------------------------------------------------------------
+
+train_FULL_data <- complete_set
+train_FULL_x <- t(train_FULL_data[, -1])
+train_FULL_y <- train_FULL_data[,1]
+train_FULL_array <- train_FULL_x
+dim(train_FULL_array) <- c(width, height, 1, ncol(train_FULL_x))
+
+
+
+# Set up the symbolic model
+#-------------------------------------------------------------------------------
+
+## start of train function
+cnn_train <- function(train_x, train_y, output_model_name, saveFile=T, seed = 100,
+                      num_round = 40, batch_size = 50, learn_rate = 0.01 
+                      ) {
+  library(mxnet)
+  
+  data <- mx.symbol.Variable('data')
+  # 1st convolutional layer
+  conv_1 <- mx.symbol.Convolution(data = data, kernel = c(5, 5), num_filter = 20)
+  tanh_1 <- mx.symbol.Activation(data = conv_1, act_type = "tanh")
+  pool_1 <- mx.symbol.Pooling(data = tanh_1, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+  # 2nd convolutional layer
+  conv_2 <- mx.symbol.Convolution(data = pool_1, kernel = c(5, 5), num_filter = 50)
+  tanh_2 <- mx.symbol.Activation(data = conv_2, act_type = "tanh")
+  pool_2 <- mx.symbol.Pooling(data=tanh_2, pool_type = "max", kernel = c(2, 2), stride = c(2, 2))
+  # 1st fully connected layer
+  flatten <- mx.symbol.Flatten(data = pool_2)
+  fc_1 <- mx.symbol.FullyConnected(data = flatten, num_hidden = 500)
+  tanh_3 <- mx.symbol.Activation(data = fc_1, act_type = "tanh")
+  # 2nd fully connected layer
+  fc_2 <- mx.symbol.FullyConnected(data = tanh_3, num_hidden = 2)
+  # Output. Softmax output since we'd like to get some probabilities.
+  NN_model <- mx.symbol.SoftmaxOutput(data = fc_2)
+  
+  # Pre-training set up
+  #-------------------------------------------------------------------------------
+  # Set seed for reproducibility
+  mx.set.seed(seed)
+  
+  # Device used. CPU in my case.
+  devices <- mx.cpu()
+  
+  # Training
+  #-------------------------------------------------------------------------------
+  
+  # Train the model
+  model <- mx.model.FeedForward.create(NN_model,
+                                       X = train_x,
+                                       y = train_y,
+                                       ctx = devices,
+                                       num.round = num_round,
+                                       array.batch.size = batch_size,
+                                       learning.rate = learn_rate,
+                                       momentum = 0.9,
+                                       wd = 0.00001,
+                                       eval.metric = mx.metric.accuracy,
+                                       epoch.end.callback = mx.callback.log.train.metric(100))
+  if (saveFile == TRUE){
+    mx.model.save(model, prefix = paste0("../../output/mxnet_", output_model_name), iteration = 1)
   }
-  save(err_cv, file="../output/err_cv.RData")
-}
-```
-
-Visualize cross-validation results. 
-
-```{r cv_vis}
-if(run.cv){
-  load("../output/err_cv.RData")
-  #pdf("../fig/cv_results.pdf", width=7, height=5)
-  plot(model_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
-       main="Cross Validation Error", type="n", ylim=c(0, 0.25))
-  points(model_values, err_cv[,1], col="blue", pch=16)
-  lines(model_values, err_cv[,1], col="blue")
-  arrows(model_values, err_cv[,1]-err_cv[,2], model_values, err_cv[,1]+err_cv[,2], 
-        length=0.1, angle=90, code=3)
-  #dev.off()
-}
-```
-
-
-* Choose the "best"" parameter value
-```{r best_model}
-model_best=model_values[1]
-if(run.cv){
-  model_best <- model_values[which.min(err_cv[,1])]
 }
 
-par_best <- list(depth=model_best)
-```
 
-* Train the model with the entire training set using the selected model (model parameter) via cross-validation.
-```{r final_train}
-tm_train=NA
-tm_train <- system.time(fit_train <- train(dat_train, label_train, par_best))
-save(fit_train, file="../output/fit_train.RData")
-```
 
-### Step 5: Make prediction 
-Feed the final training model with the completely holdout testing data. 
-```{r test}
-tm_test=NA
-if(run.test){
-  load(file=paste0("../output/feature_", "zip", "_", "test", ".RData"))
-  load(file="../output/fit_train.RData")
-  tm_test <- system.time(pred_test <- test(fit_train, dat_test))
-  save(pred_test, file="../output/pred_test.RData")
+# Test
+#-------------------------------------------------------------------------------
+## Predict on test set
+
+cnn_test <- function(model, test_array, saveFile=FALSE) {
+  predict_probs <- predict(model, test_array)
+  predicted_labels <- max.col(t(predict_probs)) - 1
+  predict_table <- table(test_data[, 1], predicted_labels)
+    
+  if (saveFile == TRUE){
+    write.csv(predict_table, file = "../output/cnn_predict.csv")
+  }
+    
+  ## accuracy rate
+  accuracy <- sum(diag(table(test_data[, 1], predicted_labels)))/nrow(test_data)
+  return(accuracy)
 }
+
+cnn_test(model, test_array, saveFile = T)
+
+
+model <- mx.model.load(prefix = "../output/mxnet_model", iteration = 1)
+
 ```
 
-### Summarize Running Time
-Prediction performance matters, do does the running times for constructing features and for training the model, especially when the computation resource is limited. 
-```{r running_time}
-cat("Time for constructing training features=", tm_feature_train[1], "s \n")
-cat("Time for constructing testing features=", tm_feature_test[1], "s \n")
-cat("Time for training model=", tm_train[1], "s \n")
-cat("Time for making prediction=", tm_test[1], "s \n")
+### Prediction
+```{r}
+Please refer to "Main.R"
 ```
+
+
+

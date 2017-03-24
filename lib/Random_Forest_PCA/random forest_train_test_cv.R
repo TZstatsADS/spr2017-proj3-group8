@@ -6,7 +6,7 @@ rf_train <- function(dat_train, label_train, ntree=500,
   
   library(ranger)
   library(dplyr)
-  
+  #browser()
   train <- data.frame(dat_train) %>% mutate(label=factor(label_train))
 
   if (ranger==TRUE){
@@ -31,7 +31,7 @@ rf_train <- function(dat_train, label_train, ntree=500,
 
 # Random Forest: Test
 rf_test <- function(fit_train, dat_test, saveFile=FALSE){
-  
+
   rf_predict <- predict(fit_train, dat_test)$predictions
   
   if (saveFile == TRUE){
@@ -61,7 +61,7 @@ rf_cv <- function(dat_train, label_train, K=5, ntree=500){
     test.label <- label_train[s == i]
     
     rf_fit <- rf_train(dat_train = train.data, label_train = train.label, ntree = ntree)
-
+#browser()
     rf_predict <- rf_test(fit_train = rf_fit, dat_test = test.data)
     
     cv.error[i] <- mean(rf_predict != test.label)
@@ -72,4 +72,27 @@ rf_cv <- function(dat_train, label_train, K=5, ntree=500){
   sd <- sd(cv.error)
   
   return(c(error, sd))
+}
+
+
+# Random Forest with PCA: Train
+rf_pca_train <- function(dat_train, label_train, ntree=350, pca_threshold=0.2){
+  
+  pc_train <- feature.pca(dat_feature = dat_train, threshold = pca_threshold)
+
+  fit_train_rf <- rf_train(dat_train = pc_train, label_train = label, ntree = ntree)
+  
+  return(fit_train_rf)
+}
+
+
+
+# Random Forest with PCA: Test
+rf_pca_test <- function(fit_train, dat_test, ntree=350, pca_threshold=0.2){
+  
+  pc_test <- feature.pca(dat_feature = dat_test, threshold = pca_threshold)
+  
+  predict_rf <- rf_test(fit_train = fit_train, dat_test = pc_test)
+  
+  return(predict_rf)
 }
