@@ -26,7 +26,7 @@ for (i in 1:length(threshold_value)){
 }
 
 # Tune parameter for random forest: ntree
-ntree <- seq(10, 400, by=10) 
+ntree <- seq(10, 400, by=20) 
 
 
 err_cv_rf <- matrix(NA, ncol=length(ntree), nrow=length(threshold_value))
@@ -81,7 +81,7 @@ ggplot(cleaned_err_cv_rf) +
 dev.off()
   
 # Choose the best parameter value from visualization
-best_pca_thre <- 0.4
+best_pca_thre <- 0.2
 best_ntree <- 350
 
 
@@ -89,7 +89,7 @@ best_ntree <- 350
 
 # train the model with the entire training set
 pc_train <- feature.pca(dat_feature = feature, threshold = best_pca_thre, plot=TRUE)
-tm_train_rf <- system.time(fit_train <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
+tm_train_rf <- system.time(fit_train_rf <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
 save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 
