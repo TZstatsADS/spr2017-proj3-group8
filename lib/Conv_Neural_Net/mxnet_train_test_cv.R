@@ -1,94 +1,3 @@
-# install packages
-# --------------------------------------------------------------
-
-install.packages("drat", repos="https://cran.rstudio.com")
-drat:::addRepo("dmlc")
-install.packages("mxnet")
-install.packages("stringi")
-install.packages("caret")
-
-source("https://bioconductor.org/biocLite.R")
-biocLite("EBImage", ask = F)
-
-## pbapply is a library to add progress bar *apply functions
-## pblapply will replace lapply
-install.packages("pbapply")
-
-
-# Load function to extract image features
-# --------------------------------------------------------------
-source("extract_feature.R")
-
-
-# If not starting from scratch, load files from output
-# --------------------------------------------------------------
-load(file = "../../output/rawfeature_128X128.RData")
-complete_set <- feature_matrix
-
-## for 80% of data
-load(file = "../../output/train_data.rda")
-load(file = "../../output/test_data.rda")
-
-
-# Load images as raw pixels
-#-------------------------------------------------------------------------------
-image_dir <- "../data/raw_images"
-
-width <- 128
-height <- 128
-
-label <- read.csv("../data/labels.csv")
-colnames(label) <- "label"
-complete_set <- extract_feature(dir_path = image_dir, 
-                                data_name = "128X128",
-                                width = width, 
-                                height = height)
-
-
-# Split data into training and test and export files
-#-------------------------------------------------------------------------------
-library(caret)
-
-## test/training partitions
-training_index <- createDataPartition(complete_set$label, p = .8, times = 1)
-training_index <- unlist(training_index)
-train_set <- complete_set[training_index,]
-dim(train_set)
-train_data <- data.matrix(train_set)
-save(train_data, file = "../output/train_data.rda")
-
-test_set <- complete_set[-training_index,]
-dim(test_set)
-test_data <- data.matrix(test_set)
-save(test_data, file = "../output/test_data.rda")
-
-# Put data into format for model (train/test)
-#-------------------------------------------------------------------------------
-## Fix train and test datasets
-
-train_x <- t(train_data[, -1])
-train_y <- train_data[,1]
-train_array <- train_x
-dim(train_array) <- c(width, height, 1, ncol(train_x))
-
-
-test_x <- t(test_data[,-1])
-test_y <- test_data[,1]
-test_array <- test_x
-dim(test_array) <- c(width, height, 1, ncol(test_x))
-
-
-# Put data into format for model (FULL)
-#-------------------------------------------------------------------------------
-
-train_FULL_data <- complete_set
-train_FULL_x <- t(train_FULL_data[, -1])
-train_FULL_y <- train_FULL_data[,1]
-train_FULL_array <- train_FULL_x
-dim(train_FULL_array) <- c(width, height, 1, ncol(train_FULL_x))
-
-
-
 # Set up the symbolic model
 #-------------------------------------------------------------------------------
 
@@ -156,7 +65,7 @@ cnn_test <- function(model, test_array, saveFile=FALSE) {
   predict_table <- table(test_data[, 1], predicted_labels)
     
   if (saveFile == TRUE){
-    write.csv(predict_table, file = "../output/cnn_predict.csv")
+    write.csv(predict_table, file = "../../output/cnn_predict.csv")
   }
     
   ## accuracy rate
@@ -168,5 +77,4 @@ cnn_test <- function(model, test_array, saveFile=FALSE) {
 cnn_test(model, test_array, saveFile = T)
 
 
-model <- mx.model.load(prefix = "../output/mxnet_model", iteration = 1)
-
+model <- mx.model.load(prefix = "../../output/mxnet_model", iteration = 1)
