@@ -210,8 +210,8 @@ source("random forest_train_test_cv.R")
 # Load features and label
 library(data.table)
 library(dplyr)
-feature <- fread("../../output/hog_feature+sift.csv", header = TRUE)
-label <- fread("../../data/labels.csv")
+feature <- fread("../output/hog_feature+sift.csv", header = TRUE)
+label <- fread("../data/labels.csv")
 label <- c(t(label))
 feature <- tbl_df(feature) 
 
@@ -235,11 +235,11 @@ for (j in 1:length(ntree)){
   
 
 # Save results
-save(err_cv_rf, file="../../output/err_cv_rf.RData")
-save(err_sd_rf, file="../../output/err_sd_rf.RData") 
+save(err_cv_rf, file="../output/err_cv_rf.RData")
+save(err_sd_rf, file="../output/err_sd_rf.RData") 
 
 # Visualize CV results
-png(filename=paste("../../figs/cv_result_rf.png"))
+png(filename=paste("../figs/cv_result_rf.png"))
 plot(x=ntree, y=err_cv_rf, type="l", ylab="error rate",main="Random Forest")
 dev.off()
 
@@ -251,12 +251,12 @@ best_ntree <- 300
 
 # train the model with the entire training set
 tm_train_rf <- system.time(fit_train_rf <- rf_train(dat_train=feature, label_train=label, ntree=best_ntree))
-save(fit_train_rf, file="../../output/fit_train_rf.RData")
+save(fit_train_rf, file="../output/fit_train_rf.RData")
 
 
 ### Make prediction 
 tm_test_rf <- system.time(pred_test_rf <- rf_test(fit_train = fit_train_rf, dat_test=feature))
-save(pred_test_rf, file="../../output/pred_test_rf.RData")
+save(pred_test_rf, file="../output/pred_test_rf.RData")
 
 
 ```
@@ -264,8 +264,8 @@ save(pred_test_rf, file="../../output/pred_test_rf.RData")
 ### Step 5: Nerual Network
 ```{r}
 # Load features and label
-feature <- read.csv("../../output/hog_feature+sift.csv", header = TRUE)
-label <- fread("../../data/labels.csv")
+feature <- read.csv("../output/hog_feature+sift.csv", header = TRUE)
+label <- fread("../data/labels.csv")
 label <- c(t(label))
 
 ######### Tuning parameters #########
