@@ -42,9 +42,6 @@ if(!require("ranger")){
 if(!require("drat")){
   install.packages("drat", repos="https://cran.rstudio.com")
 }
-if(!require("mxnet")){
-  install.packages("mxnet")
-}
 if(!require("stringi")){
   install.packages("stringi")
 }
@@ -54,7 +51,9 @@ if(!require("caret")){
 if(!require("pbapply")){
   install.packages("pbapply")
 }
-library()
+if(!require("mxnet")){
+  install.packages("mxnet")
+}
 library("drat")
 library("mxnet")
 library("stringi")
@@ -68,10 +67,10 @@ library("EBImage")
 library("gbm")
 ```
 
-### Step 0: specify directories.
+### Step 0: specify directories: To source file location
 
 ```{r wkdir, eval=FALSE}
-setwd("./spr2017-proj3-group8") 
+setwd("E:/statistics/applied data science/Project3/spr2017-proj3-group8/doc") 
 ```
 
 
@@ -348,7 +347,7 @@ height <- 128
 label <- read.csv("../data/labels.csv")
 colnames(label) <- "label"
 complete_set <- extract_feature(dir_path = image_dir, 
-                                data_name = "128X128"
+                                data_name = "128X128",
                                 width = width, 
                                 height = height)
 
@@ -481,7 +480,7 @@ model <- mx.model.load(prefix = "../output/mxnet_model", iteration = 1)
 
 ### Prediction
 ```{r}
-Please refer to "Main.R"
+test(dat_test)
 ```
 
 
