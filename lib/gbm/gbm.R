@@ -1,52 +1,30 @@
 
-gbm_train <- function(dat_train, label_train){
+gbm_train <- function(dat_train, label_train, ntree=250,depth=3){
   
-
+  
   library("gbm")
-  depth_values<-c(1,3,5)
-  err_cv<-array(dim=c(length(depth_values), 2))
-  
-  K=5
-  for(k in 1:length(depth_values)){
-    err_cv[k,] <- gbm_cv(dat_train, label_train, K=K,depth=depth_values[k])
-  }
-  
-  save(err_cv, file="../output/err_train_gbm.RData")
-  
-  print (err_cv)
-  
-  depth_best <- depth_values[which.min(err_cv[,1])]
-  
   fit_gbm <- gbm.fit(x=dat_train, y=label_train,
-                     n.trees=250,
+                     n.trees=ntree,
                      distribution="adaboost",
-                     interaction.depth=depth_best, 
+                     interaction.depth=depth, 
                      bag.fraction = 0.5,
                      verbose=FALSE)
   best_iter <- gbm.perf(fit_gbm, method="OOB", plot.it = FALSE)
-  fit_train<-list(fit=fit_gbm, iter=best_iter)
-  save(fit_train, file="fit_train_gbm.RData")
   
-  
-  png("../fig/cv_results_gbm.pdf", width=7, height=5)
-  plot(depth_values, err_cv[,1], xlab="Interaction Depth", ylab="CV Error",
-       main="Cross Validation Error",type="l",ylim=c(0,0.4))
-  dev.off()
-  
-  
-  
-  return(list(fit=fit_gbm, iter=best_iter,depth=depth_best))
+  return(list(fit=fit_gbm, iter=best_iter))
 }
+
 
 
 gbm_test<-function(fit_train,dat_test) {
   library("gbm")
   pred_gbm<-predict(fit_train,newdata=dat_test,
-                    n.trees=fit_train$iter,depth=fit_train$depth,type="response")
+                    n.trees=fit_train$n.trees,depth=fit_train$interaction.depth,
+                    type="response")
   result<-as.numeric(pred_gbm>0.5)
-  if (saveFile == TRUE){
+ 
   write.csv(result, file = "gbm_predict.csv")
-   }
+ 
   
   return(result)
 }

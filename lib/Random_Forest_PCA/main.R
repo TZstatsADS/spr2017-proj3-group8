@@ -21,14 +21,16 @@ feature <- tbl_df(t(feature))
 threshold_value <- seq(0.1, 0.9, by=0.1)
 
 for (i in 1:length(threshold_value)){
+  cat(i)
   pca_thre <- feature.pca(dat_feature = feature, threshold = threshold_value[i])
 }
 
 # Tune parameter for random forest: ntree
-ntree <- seq(10, 400, by=10) 
+ntree <- seq(10, 400, by=20) 
 
-err_cv <- matrix(NA, ncol=length(ntree), nrow=length(threshold_value))
-err_sd <- matrix(NA, ncol=length(ntree), nrow=length(threshold_value))
+
+err_cv_rf <- matrix(NA, ncol=length(ntree), nrow=length(threshold_value))
+err_sd_rf <- matrix(NA, ncol=length(ntree), nrow=length(threshold_value))
 
 for (i in 1:length(threshold_value)){
   cat("i=", i, "\n")
@@ -40,38 +42,38 @@ for (i in 1:length(threshold_value)){
   for (j in 1:length(ntree)){
     cat("j=", j, "\n")
     result <- rf_cv(dat_train = pca_thre, label_train = label, K = 5, ntree = ntree[j])
-    err_cv[i,j] <- result[1]
-    err_sd[i,j] <- result[2]
+    err_cv_rf[i,j] <- result[1]
+    err_sd_rf[i,j] <- result[2]
   }
 }  
 
 # Transform into dataframe
-err_cv_df <- data.frame(err_cv)
-colnames(err_cv_df) <- ntree
-rownames(err_cv_df) <- threshold_value
+err_cv_rf_df <- data.frame(err_cv_rf)
+colnames(err_cv_rf_df) <- ntree
+rownames(err_cv_rf_df) <- threshold_value
 
-err_sd_df <- data.frame(err_sd) 
-colnames(err_sd_df) <- ntree
-rownames(err_sd_df) <- threshold_value
+err_sd_rf_df <- data.frame(err_sd_rf) 
+colnames(err_sd_rf_df) <- ntree
+rownames(err_sd_rf_df) <- threshold_value
 
 # Reshape previous dataframe into narrow form
 library(tidyr)
 library(ggplot2)
-cleaned_err_cv <- err_cv_df %>% 
+cleaned_err_cv_rf <- err_cv_rf_df %>% 
   tibble::rownames_to_column("threshold_value") %>% 
   gather(key = ntree, value = val, -threshold_value)
 
-cleaned_err_sd <- err_sd_df %>% 
+cleaned_err_sd_rf <- err_sd_rf_df %>% 
   tibble::rownames_to_column("threshold_value") %>% 
   gather(key = ntree, value = val, -threshold_value)
 
 # Save results
-save(err_cv, err_cv_df, cleaned_err_cv, file="../../output/err_cv_rf.RData")
-save(err_sd, err_sd_df, cleaned_err_sd, file="../../output/err_sd_rf.RData") 
+save(err_cv_rf, err_cv_rf_df, cleaned_err_cv_rf, file="../../output/err_cv_rf.RData")
+save(err_sd_rf, err_sd_rf_df, cleaned_err_sd_rf, file="../../output/err_sd_rf.RData") 
 
 # Visualize CV results
 png(filename=paste("../../figs/cv_result_rf.png"))
-ggplot(cleaned_err_cv) +
+ggplot(cleaned_err_cv_rf) +
   geom_line(aes(x=as.numeric(ntree), y=val, color=threshold_value)) +
   ggtitle("CV Results of Random Forest") +
   xlab("ntree")+
@@ -80,14 +82,14 @@ dev.off()
   
 # Choose the best parameter value from visualization
 best_pca_thre <- 0.2
-best_ntree <- 300
+best_ntree <- 350
 
 
 ############# Retrain model with tuned parameters ##############
 
 # train the model with the entire training set
-pc_train <- feature.pca(dat_feature = feature, threshold = best_pca_thre)
-tm_train_rf <- system.time(fit_train <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
+pc_train <- feature.pca(dat_feature = feature, threshold = best_pca_thre, plot=TRUE)
+tm_train_rf <- system.time(fit_train_rf <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
 save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 

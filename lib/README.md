@@ -13,3 +13,15 @@ This folder contains training function, test function, cross validation function
 
 + PCA.R
 Extract pca features from SIFT features.
+
++ Conv_Neural_Net
+This folder contains training, test and cross validation function for Convoluted Neural Network model. 
+
++ Neural_Net
+This folder contains training, test and cross validation function for Neural Network model. 
+
++ HOG_feature.R
+Extract hog features and combine it with SIFT features.
+
++ extract_feature.R
+Read in raw images and output pixels for certain width and height, to be used in CNN model.
