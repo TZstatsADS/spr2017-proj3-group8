@@ -36,12 +36,8 @@ library(gbm)
 
 # Test Features
 
- test_feature_hs <- sample(1:2000, 400)
- test_label_hs <- label[test_feature_hs]
- test_feature_hs <- feature_hs[test_feature_hs,]
-
-test_features_hs <- read.csv("../output/test_hog_feature+sift.csv", header = TRUE)
-test_feature_s <- read.csv("../output/sift_features/test_sift_features.csv", header = TRUE)
+test_feature_hs <- read.csv("../output/test_hog_feature+sift.csv", header = TRUE)
+test_feature_s <- read.csv("../data/test_data/sift_features/sift_features.csv", header = TRUE)
 test_feature_s <- as.data.frame(t(test_feature_s))
 ```
 
@@ -80,16 +76,25 @@ nn_model_hs <- nn_train(train=feature_hs, y=label, hiddenLayers=2)
 ### Test model (baseline model, just sift features)
 
 ```{r}
-preds_s <- gbm_test(fit_train=gbm_model, dat_test=test_feature_hs)
+preds_s <- gbm_test(fit_train=gbm_model, dat_test=test_feature_s)
 ```
 
 ### Test Model (improved model, including hog features)
 
 ```{r}
-rf_preds  <- as.numeric(rf_test(fit_train=rf_model_hs, dat_test=test_feature_hs))
+rf_preds  <- as.numeric(rf_test(fit_train=rf_model_hs, dat_test=test_feature_hs))-1
 nn_preds  <- as.numeric(nn_test(nn=nn_model_hs, test=test_feature_hs))
 gbm_preds <- as.numeric(gbm_test(fit_train=gbm_model_hs, dat_test=test_feature_hs))
 
 preds_hs <- rbind(rf_preds,nn_preds,gbm_preds)
 preds_hs <- round(colMeans(preds_hs),0)
+```
+
+### Save predictions to dataframe provided and export
+
+```{r}
+testLabels$`Baseline (0 for chicken, 1 for dog)` <- preds_s
+testLabels$Advanced <- preds_hs
+
+write.csv(testLabels, "../output/labels.csv")
 ```
