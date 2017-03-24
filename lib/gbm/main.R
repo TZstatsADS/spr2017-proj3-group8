@@ -1,10 +1,10 @@
 # Setup
-setwd("spr2017-proj3-group8/data")
+setwd("/Users/yj2360/Downloads/spr2017-proj3-group8-master/doc")
 
 library(gbm)
 library(data.table)
 library(dplyr)
-source("../lib/gbm.R")
+source("../lib/gbm/gbm.R")
 
 # Load data
 
@@ -38,7 +38,7 @@ depth_best1 <- depth_values[which.min(err_cv[,1])]
 
 # best depth is 5
 fit_train_gbm<-gbm_train(dat_train, label_train,depth=depth_best1)
-pred_test1<-as.numeric(gbm_test(fit_train_gbm,dat_train)>0.5)
+pred_test1<-gbm_test(fit_train_gbm$fit,dat_train)
 
 
 ########################################################
@@ -64,9 +64,9 @@ depth_best2 <- depth_values[which.min(err_cv[,1])]
 
 
 fit_train_gbm_hog<-gbm_train(hog_train, label_train,depth=depth_best2)
-pred_test2<-as.numeric(gbm_test(fit_train_gbm_hog,hog_train)>0.5)
+pred_test2<-gbm_test(fit_train_gbm_hog$fit,hog_train)
 
 # Error rate
 mean(pred_test1!=label_train)
 mean(pred_test2!=label_train)
-# 0.2355 & 0.098
+# 0.23 & 0.10
