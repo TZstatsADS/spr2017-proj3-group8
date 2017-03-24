@@ -67,7 +67,7 @@ Methology: Cross Validation with different number of trees
 
 Number of trees | Error Rate
 ------------- | -------------  
- 300 | 0.1
+ 300 | 0.14
 
 ### Neural Network
 Tuned Parameters are: Number of Hidden Layer = 3
@@ -91,6 +91,6 @@ Number of Rounds | Batch Size | Learning Rate | Error Rate
 
 ### Majority Vote
 
-Error rate 
+Error rate 0.107
 
 
