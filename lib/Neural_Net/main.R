@@ -1,17 +1,19 @@
 # Load functions
 source("NN_train_test_cv.R")
 
-
 # Load features and label
 library(data.table)
 library(dplyr)
-feature <- read.csv("../../output/hog_feature+sift_resize.csv", header = TRUE)
-rownames(feature) <- feature$X
-feature <- subset(feature, select=-c(X))
+feature <- read.csv("../../output/hog_feature+sift.csv", header = TRUE)
 label <- fread("../../data/labels.csv")
 label <- c(t(label))
 
 ######### Tuning parameters #########
+
+#### Ignore this section if optimal training parameter for hidden layers already known
+#### hiddenLayers_origFeat <- 5
+#### hiddenLayers_newFeat <- 3
+#### As found in our tuning shown belown
 
 # Tune parameter number of hidden layers
 
@@ -40,6 +42,10 @@ dev.off()
 
 dev.print(png, "../../figs/cv_result_nn.png", width=500, height=400)
 
+####
+#### Begin here if known training parameter
+####
+
 # Choose the best parameter value from visualization
 
 hiddenLayers_origFeat <- 5
@@ -48,6 +54,9 @@ hiddenLayers_newFeat <- 3
 # train the model with the entire training set
 fit_train_nn <- nn_train(train = feature, y = label, hiddenLayers = hiddenLayers_newFeat)
 save(fit_train_nn, file="../../output/fit_train_nn.RData")
+
+# qq <- nn_cv(feature, label, K=5, hiddenLayers=3)
+
 
 ### Make prediction 
 # ?? fit_train_nn <- file("../../output/fit_train_nn.RData")
