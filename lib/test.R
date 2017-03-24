@@ -3,10 +3,10 @@
 ######################################################
 
 # load functions from the models
-source("gbm/gbm.R")
-source("Neural_Net/NN_train_test_cv.R")
-source("Random_Forest_PCA/random forest_train_test_cv.R")
-source("Conv_Neural_Net/mxnet_train_test_cv.R")
+source("../lib/gbm/gbm.R")
+source("../lib/Neural_Net/NN_train_test_cv.R")
+source("../lib/Random_Forest_PCA/random forest_train_test_cv.R")
+source("../lib/Conv_Neural_Net/mxnet_train_test_cv.R")
 
 load("trained_models.RData")
 model <- mx.model.load(prefix = "../output/mxnet_FULL_model", iteration = 1)
