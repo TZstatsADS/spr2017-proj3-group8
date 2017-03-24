@@ -9,7 +9,7 @@ source("../PCA.R")
 # Load features and label
 library(data.table)
 library(dplyr)
-feature <- fread("../../output/hog_feature+sift_resize.csv", header = TRUE)
+feature <- fread("../../output/hog_feature+sift_noresize.csv", header = TRUE)
 label <- fread("../../data/labels.csv")
 label <- c(t(label))
 feature <- tbl_df(t(feature)) 
@@ -86,11 +86,12 @@ best_ntree <- 300
 ############# Retrain model with tuned parameters ##############
 
 # train the model with the entire training set
-load(paste("../../output/extracted.pca", best_pca_thre, ".RData"))
-tm_train_rf <- system.time(fit_train <- rf_train(dat_train = pca_thre, label_train = label, ntree = best_ntree))
+pc_train <- feature.pca(dat_feature = feature, threshold = best_pca_thre)
+tm_train_rf <- system.time(fit_train <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
 save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 
 ### Make prediction 
-tm_test_rf <- system.time(pred_test <- rf_test(fit_train, dat_test))
+pc_test <- feature.pca(dat_feature = dat_test, threshold = best_pca_thre)
+tm_test_rf <- system.time(pred_test_rf <- rf_test(fit_train = fit_train_rf, dat_test = pc_test))
 save(pred_test_rf, file="../../output/pred_test_rf.RData")
