@@ -1,6 +1,7 @@
 install.packages("drat", repos="https://cran.rstudio.com")
 drat:::addRepo("dmlc")
 install.packages("mxnet")
+install.packages("stringi")
 library(mxnet)
 
 # Load images
@@ -67,8 +68,8 @@ extract_feature <- function(dir_path, width, height, is_cat = TRUE, add_label = 
 }
 
 
-width <- 100
-height <- 100
+width <- 28
+height <- 28
 # cats_data <- extract_feature(dir_path = image_dir, width = width, height = height)
 # dogs_data <- extract_feature(dir_path = image_dir, width = width, height = height, is_cat = FALSE)
 
@@ -165,9 +166,9 @@ model <- mx.model.FeedForward.create(NN_model,
                                      X = train_array,
                                      y = train_y,
                                      ctx = devices,
-                                     num.round = 30,
-                                     array.batch.size = 50,
-                                     learning.rate = 0.01,
+                                     num.round = 1,
+                                     array.batch.size = 500,
+                                     learning.rate = 0.1,
                                      momentum = 0.9,
                                      wd = 0.00001,
                                      eval.metric = mx.metric.accuracy,
@@ -184,12 +185,19 @@ model <- mx.model.FeedForward.create(NN_model,
 #-------------------------------------------------------------------------------
 ## Test test set
 predict_probs <- predict(model, test_array)
-#predict_probs <- predict(logModel, test_set[, -1])
+*#predict_probs <- predict(logModel, test_set[, -1])
 predicted_labels <- max.col(t(predict_probs)) - 1
 table(test_data[, 1], predicted_labels)
 
 ## accuracy rate
 sum(diag(table(test_data[, 1], predicted_labels)))/nrow(test_set)
 
+mx.model.save(model, prefix = "mxnet_model", iteration = 1)
+save(test_array, file = "test_array.rda")
+save(test_data, file = "test_data.rda")
 
+
+load(file = "test_array.rda")
+load(file = "test_data.rda")
+model <- mx.model.load(prefix = "mxnet_model", iteration = 1)
 
