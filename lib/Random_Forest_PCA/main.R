@@ -88,8 +88,7 @@ best_ntree <- 350
 ############# Retrain model with tuned parameters ##############
 
 # train the model with the entire training set
-pc_train <- feature.pca(dat_feature = feature, threshold = best_pca_thre, plot=TRUE)
-tm_train_rf <- system.time(fit_train_rf <- rf_train(dat_train = pc_train, label_train = label, ntree = best_ntree))
+tm_train_rf <- system.time(fit_train_rf <- rf_pca_train(dat_train=feature, label_train=label, ntree=best_ntree, pca_threshold=best_pca_thre))
 save(fit_train_rf, file="../../output/fit_train_rf.RData")
 
 

@@ -73,3 +73,26 @@ rf_cv <- function(dat_train, label_train, K=5, ntree=500){
   
   return(c(error, sd))
 }
+
+
+# Random Forest with PCA: Train
+rf_pca_train <- function(dat_train, label_train, ntree=350, pca_threshold=0.2){
+  
+  pc_train <- feature.pca(dat_feature = dat_train, threshold = pca_threshold)
+
+  fit_train_rf <- rf_train(dat_train = pc_train, label_train = label, ntree = ntree)
+  
+  return(fit_train_rf)
+}
+
+
+
+# Random Forest with PCA: Test
+rf_pca_test <- function(fit_train, dat_test, ntree=350, pca_threshold=0.2){
+  
+  pc_test <- feature.pca(dat_feature = dat_test, threshold = pca_threshold)
+  
+  predict_rf <- rf_test(fit_train = fit_train, dat_test = pc_test)
+  
+  return(predict_rf)
+}
