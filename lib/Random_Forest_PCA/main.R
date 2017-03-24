@@ -9,7 +9,7 @@ source("../PCA.R")
 # Load features and label
 library(data.table)
 library(dplyr)
-feature <- fread("../../output/hog_feature+sift_noresize.csv", header = TRUE)
+feature <- fread("../../output/hog_feature+sift.csv", header = TRUE)
 label <- fread("../../data/labels.csv")
 label <- c(t(label))
 feature <- tbl_df(t(feature)) 
