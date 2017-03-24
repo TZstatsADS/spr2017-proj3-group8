@@ -45,7 +45,7 @@ Depth | Error Rate
 * HOG + a feature descriptor used in computer vision and image processing for the purpose of object detection + it counts occurrences of gradient orientation in localized portions of an image + it is computed on a dense grid of uniformly spaced cells and uses overlapping local contrast normalization for improved accuracy
 
 ### Model 
-* Majority Vote with GBM, random forest and neural network
+* Majority Vote with GBM, random forest, neural network and convolutional neural network
 
 ### GBM
 Tuned Parameters are: Depth = 5
@@ -59,17 +59,15 @@ Depth | Error Rate
 9 | 0.098
 
 ### Random Forest 
-Tuned Parameters are: PCA_Threshold = 0.2, Num_tree = 300
+Tuned Parameters are: Num_tree = 300
 
-Methology: Cross Validation with different PCA threshold and number of trees
+Methology: Cross Validation with different number of trees
 
 ![](./figs/cv_result_rf.png)
 
-![](./figs/pca visualization 0.2 .png)
-
-PCA Threshold | Number of trees | Error Rate
-------------- | -------------  | -------------
-0.2 | 300 | 0.1
+Number of trees | Error Rate
+------------- | -------------  
+ 300 | 0.1
 
 ### Neural Network
 Tuned Parameters are: Number of Hidden Layer = 3
@@ -83,16 +81,16 @@ Number of Hidden Layer | Error Rate
 3 |  0.135
 
 ### Convolutional Neural Network
-Tuned Parameters are: Number of rounds = (), batch size = 50, learn rate = 0.01
+Tuned Parameters are: Number of rounds = 40, batch size = 50, learn rate = 0.01
 
 Methology: Cross Validation with different Number of Round, Batch Size and Learning Rate
 
 Number of Rounds | Batch Size | Learning Rate | Error Rate 
 ------------- | ------------- | ------------- | -------------  
-() | 50 | 0.01 |  
+40 | 50 | 0.01 |  0.17
 
 ### Majority Vote
 
-
+Error rate 
 
 

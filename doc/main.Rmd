@@ -275,13 +275,8 @@ save(pred_test_nn, file="../../output/pred_test_nn.RData")
 
 ### Prediction
 ```{r}
-source("extract_feature.R")
+Please refer to "Main.R"
 ```
 
-### Save Time 
-```{r}
-cat("Time for training model=", tm_train[1], "s \n")
-cat("Time for making prediction=", tm_test[1], "s \n")
-```
 
 
